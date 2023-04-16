@@ -21,53 +21,69 @@ class User:
 users: list[User | None] = []
 new_user: User | None = None
 
-WELCOME: str = '''Привет! Это телеграм бот мастерской по Python!
-Советую нажать для начала на /something :)
-А чтобы познакомиться, можешь нажать на /reg 
-Если хочешь почитать что-нибудь по Python, нажми /all_books!'''
 
-BOT_TOKEN: str = '6148944879:AAF1p6l8uZtQy8c1BDS_Q9kPorE8n06EvRs'
+BOT_TOKEN: str = ''
 
 bot = TeleBot(BOT_TOKEN)
 
 
-@bot.message_handler(commands=['help', 'start', 'info', 'all_books'])
+@bot.message_handler(commands=['help', 'start'])
 def send_welcome(message: Message):
-    if message.text == '/help' or message.text == '/start':
+    bot.send_message(chat_id=message.chat.id,
+                     text='''Привет! Это телеграм бот мастерской по Python!\
+                             Советую нажать для начала на /something :) \nА чтобы познакомиться, можешь нажать на /reg 
+                             \nЕсли хочешь почитать что-нибудь по Python, нажми /all_books!
+                             \nСсылки на остальные матералы можешь получить по тегу /info''')
 
-        bot.send_message(chat_id=message.chat.id,
-                         text=WELCOME)
-    elif message.text == '/info':
-        key_board = types.InlineKeyboardMarkup(
-            [
-                [types.InlineKeyboardButton(text='GitHub',
-                                            url='https://github.com/arikmaster22/workshop-python'
-                                            )
-                 ],
 
-                [types.InlineKeyboardButton(text='Notion',
-                                            url='https://educated-ambert-8c7.notion.site/Python-f340b5dcdad248f2acc5a26afd79e7ec'
-                                            )
-                 ],
-            ]
-        )
+@bot.message_handler(commands=['info'])
+def info(message: Message):
+    notion_url: str = 'https://educated-ambert-8c7.notion.site/Python-f340b5dcdad248f2acc5a26afd79e7ec'
 
-        bot.send_message(chat_id=message.chat.id,
-                         text='Ссылки на материалы', reply_markup=key_board)
+    key_board = types.InlineKeyboardMarkup(
+        [
+            [types.InlineKeyboardButton(text='GitHub',
+                                        url='https://github.com/arikmaster22/workshop-python'
+                                        )
+             ],
 
-    elif message.text == '/all_books':
-        select_query = select(books)
+            [types.InlineKeyboardButton(text='Notion',
+                                        url=notion_url
+                                        )
+             ],
+        ]
+    )
 
-        result = conn.execute(select_query).all()
+    bot.send_message(chat_id=message.chat.id,
+                     text='Ссылки на материалы', reply_markup=key_board)
 
-        parsed_books = parse_books(result)
 
-        for book in parsed_books:
-            bot.send_message(chat_id=message.chat.id, text=book)
+def parse_books(data):
+    parsed_books: list[str | None] = [None] * len(data)
+    for i in range(len(data)):
+        select_query_author_name = select(authors.c.name).where(data[i][2] == authors.c.id)
+
+        author_name = conn.execute(select_query_author_name).scalar()
+
+        parsed_books[i] = f'Title: {data[i][1]}\nAuthor: {author_name}\nPrice: {data[i][4]}\nGenre: {data[i][3]}'
+
+    return parsed_books
+
+
+@bot.message_handler(commands=['all_books'])
+def send_books(message: Message):
+    select_query = select(books)
+
+    result = conn.execute(select_query).all()
+
+    parsed_books = parse_books(result)
+
+    for book in parsed_books:
+        bot.send_message(chat_id=message.chat.id, text=book)
 
 
 @bot.message_handler(commands=['something'])
-def send_rick_roll(message: Message):
+def send_something(message: Message):
     bot.send_message(chat_id=message.chat.id,
                      text="<a href='https://www.youtube.com/watch?v=dQw4w9WgXcQ'>Тыкни!</a>", parse_mode='HTML',
                      disable_web_page_preview=True)
@@ -75,8 +91,9 @@ def send_rick_roll(message: Message):
 
 @bot.message_handler(commands=['reg'])
 def reg(message: Message):
-    bot.send_message(chat_id=message.chat.id,
-                     text='Введи свое имя, фамилию и возраст в формате фамилия имя возраст. Например, Муниев Аркадий 30 лет')
+    text: str = 'Введи свое имя, фамилию и возраст в формате фамилия имя возраст. Например, Муниев Аркадий 30 лет'
+
+    bot.send_message(chat_id=message.chat.id, text=text)
 
     bot.register_next_step_handler(message=message, callback=signup)
 
@@ -126,18 +143,6 @@ def callback_worker(call: CallbackQuery):
         bot.send_message(chat_id=call.message.chat.id, text='Введи еще раз свое имя, фамилию и возраст')
         bot.register_next_step_handler_by_chat_id(
             call.message.chat.id, callback=signup)
-
-
-def parse_books(data):
-    parsed_books: list[str | None] = [None] * len(data)
-    for i in range(len(data)):
-        select_query_author_name = select(authors.c.name).where(data[i][2] == authors.c.id)
-
-        author_name = conn.execute(select_query_author_name).scalar()
-
-        parsed_books[i] = f'Title: {data[i][1]}\nAuthor: {author_name}\nPrice: {data[i][4]}\nGenre: {data[i][3]}'
-
-    return parsed_books
 
 
 if __name__ == '__main__':

@@ -25,11 +25,11 @@ meta.create_all(engine)
 
 
 def add_new_author(name: str):
-    insert_author_query = authors.insert().values(name=name) # сам SQL-запрос
+    insert_author_query = authors.insert().values(name=name)  # сам SQL-запрос
 
-    conn.execute(insert_author_query) # выполнение запроса
+    conn.execute(insert_author_query)  # выполнение запроса
 
-    conn.commit() # сохранение изменений
+    conn.commit()  # сохранение изменений
 
 
 def add_new_book(title: str, author_id: int, genre: str, price: int):
@@ -46,25 +46,25 @@ def select_query():
     books_select_query = books.select().where(books.c.price >= 4000)
 
     print()
-    print(f'SQL-запрос:\n{books_select_query}') # посмотрим на сам запрос
+    print(f'SQL-запрос:\n{books_select_query}')  # посмотрим на сам запрос
     print()
 
     result = conn.execute(books_select_query)
 
     print()
-    print(f'Результат запроса:\n {result}') # посмотрим на результат запроса
+    print(f'Результат запроса:\n {result}')  # посмотрим на результат запроса
     print()
 
     for row in result:
         print(row)
 
-    result = conn.execute(books_select_query).all() # просто select
-    
+    result = conn.execute(books_select_query).all()  # просто select
+
     print()
     print(f'Результат запроса:\n {result}')
     print()
 
-    select_query = select(books, authors).where(books.c.author_id == authors.c.id) # select с фильтрацией
+    select_query = select(books, authors).where(books.c.author_id == authors.c.id)  # select с фильтрацией
 
     result = conn.execute(select_query).all()
 
@@ -76,16 +76,16 @@ def select_query():
 if __name__ == '__main__':
     add_new_author('Mark Lutz')
 
-    add_new_book(title='Learning Python Tom 1', author_id='1', genre='Education', price=3000)
+    add_new_book(title='Learning Python Tom 1', author_id=1, genre='Education', price=3000)
 
-    add_new_book(title='Learning Python Tom 2', author_id='1', genre='Education', price=4000)
-    
+    add_new_book(title='Learning Python Tom 2', author_id=1, genre='Education', price=4000)
+
     try:
-    add_new_book(title='Learning Python Tom 1', author_id='1', genre='Education', price=3000)
+        add_new_book(title='Learning Python Tom 1', author_id=1, genre='Education', price=3000)
 
     except Exception as ex:
         print()
         print(f'Exception:\n{ex}!!!')
         print()
 
-    select_query()
+select_query()
