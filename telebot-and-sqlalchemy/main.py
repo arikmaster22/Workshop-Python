@@ -4,7 +4,7 @@ from telebot import TeleBot
 from telebot.types import Message, CallbackQuery
 from telebot import types
 
-from telegram_and_sql.database import authors, books, conn
+from database import authors, books, conn
 
 
 class User:
@@ -26,7 +26,7 @@ WELCOME: str = '''Привет! Это телеграм бот мастерск�
 А чтобы познакомиться, можешь нажать на /reg 
 Если хочешь почитать что-нибудь по Python, нажми /all_books!'''
 
-BOT_TOKEN: str = ''
+BOT_TOKEN: str = '6148944879:AAF1p6l8uZtQy8c1BDS_Q9kPorE8n06EvRs'
 
 bot = TeleBot(BOT_TOKEN)
 
